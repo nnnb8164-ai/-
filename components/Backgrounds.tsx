@@ -1,55 +1,106 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { BackgroundType } from '../types';
 
 interface BackgroundProps {
   type: BackgroundType;
 }
 
-// --- Aurora Effect (Seamless CSS Animation) ---
-// Simulates the Northern Lights using moving gradients.
+// --- Aurora Effect (Real Image + Dynamic Overlays) ---
 const AuroraBackground: React.FC = () => {
-  return (
-    <div className="fixed inset-0 z-[-1] overflow-hidden bg-[#000000]">
-      {/* Deep dark base */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#020617] opacity-100" />
-      
-      {/* Aurora Layers - using keyframes defined in global styles or tailwind arbitrary values */}
-      {/* Green/Teal Layer */}
-      <div 
-        className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] opacity-40 blur-[80px]"
-        style={{
-          background: 'radial-gradient(circle at center, rgba(52, 211, 153, 0.4) 0%, transparent 50%)',
-          animation: 'aurora-spin 25s linear infinite',
-        }} 
-      />
-      
-      {/* Purple/Blue Layer */}
-      <div 
-        className="absolute bottom-[-50%] right-[-50%] w-[200%] h-[200%] opacity-40 blur-[80px]"
-        style={{
-          background: 'radial-gradient(circle at center, rgba(139, 92, 246, 0.4) 0%, transparent 50%)',
-          animation: 'aurora-spin 30s linear infinite reverse',
-        }} 
-      />
+  // Generate random snowflakes
+  const snowflakes = useMemo(() => {
+    return Array.from({ length: 100 }).map((_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      animationDuration: `${Math.random() * 15 + 10}s`, // Slow fall
+      animationDelay: `${Math.random() * -20}s`,
+      opacity: Math.random() * 0.5 + 0.3,
+      size: `${Math.random() * 3 + 1}px`
+    }));
+  }, []);
 
-      {/* Floating accent */}
+  return (
+    <div className="fixed inset-0 z-[-1] overflow-hidden bg-black">
+      {/* 1. Base Real Image with Slow Zoom-Out Effect */}
       <div 
-        className="absolute top-[20%] right-[20%] w-[100%] h-[100%] opacity-30 blur-[100px]"
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
         style={{
-          background: 'radial-gradient(circle at center, rgba(6, 182, 212, 0.3) 0%, transparent 60%)',
-          animation: 'aurora-pulse 15s ease-in-out infinite',
+          // High-quality image of Aurora, Snowy Mountains, and Lake Reflection
+          backgroundImage: 'url("https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2070&auto=format&fit=crop")',
+          filter: 'brightness(0.75) contrast(1.1)', // Slightly darkened to make overlays pop
+          animation: 'slow-zoom 60s ease-in-out infinite alternate'
         }}
       />
+
+      {/* 2. Dynamic Aurora Overlays (Simulating movement in the sky) */}
       
+      {/* Layer A: Main Green Curtain (Flowing) */}
+      <div className="absolute inset-0 z-10 mix-blend-screen opacity-50 pointer-events-none overflow-hidden">
+          <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] animate-aurora-wave"
+               style={{
+                 background: 'radial-gradient(ellipse at 50% 50%, rgba(52, 211, 153, 0) 20%, rgba(52, 211, 153, 0.2) 40%, rgba(16, 185, 129, 0.6) 60%, rgba(5, 150, 105, 0.1) 80%, transparent 100%)',
+                 transformOrigin: 'center',
+                 filter: 'blur(80px)'
+               }}
+          />
+      </div>
+
+      {/* Layer B: Secondary Purple/Pink Glow (Shifting) */}
+       <div className="absolute inset-0 z-10 mix-blend-color-dodge opacity-40 pointer-events-none">
+          <div className="absolute top-0 left-0 w-full h-full animate-aurora-shift"
+               style={{
+                 background: 'linear-gradient(135deg, transparent 0%, rgba(139, 92, 246, 0.1) 30%, rgba(167, 139, 250, 0.3) 50%, transparent 80%)',
+                 filter: 'blur(60px)'
+               }}
+          />
+      </div>
+
+      {/* 3. Falling Snow Particles */}
+      <div className="absolute inset-0 z-20 pointer-events-none">
+        {snowflakes.map((flake) => (
+          <div
+            key={flake.id}
+            className="absolute rounded-full bg-white animate-snowfall"
+            style={{
+              left: flake.left,
+              top: '-20px',
+              width: flake.size,
+              height: flake.size,
+              opacity: flake.opacity,
+              animationDuration: flake.animationDuration,
+              animationDelay: flake.animationDelay,
+              boxShadow: `0 0 4px rgba(255,255,255,0.8)`
+            }}
+          />
+        ))}
+      </div>
+
       <style>{`
-        @keyframes aurora-spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        @keyframes slow-zoom {
+          0% { transform: scale(1.15); }
+          100% { transform: scale(1.0); }
         }
-        @keyframes aurora-pulse {
-          0%, 100% { transform: scale(1); opacity: 0.3; }
-          50% { transform: scale(1.1); opacity: 0.5; }
+
+        @keyframes aurora-wave {
+          0% { transform: rotate(0deg) scale(1) translate(0, 0); opacity: 0.5; }
+          33% { transform: rotate(5deg) scale(1.1) translate(2%, 5%); opacity: 0.7; }
+          66% { transform: rotate(-5deg) scale(0.9) translate(-2%, -5%); opacity: 0.5; }
+          100% { transform: rotate(0deg) scale(1) translate(0, 0); opacity: 0.5; }
+        }
+
+        @keyframes aurora-shift {
+          0% { transform: translateX(-10%); opacity: 0.3; }
+          50% { transform: translateX(10%); opacity: 0.6; }
+          100% { transform: translateX(-10%); opacity: 0.3; }
+        }
+
+        @keyframes snowfall {
+          0% { transform: translateY(0) translateX(0); }
+          25% { transform: translateY(25vh) translateX(20px); }
+          50% { transform: translateY(50vh) translateX(-20px); }
+          75% { transform: translateY(75vh) translateX(20px); }
+          100% { transform: translateY(110vh) translateX(0); }
         }
       `}</style>
     </div>
@@ -57,7 +108,6 @@ const AuroraBackground: React.FC = () => {
 };
 
 // --- Meteor Effect (Seamless Canvas Loop) ---
-// A starry night with randomized shooting stars.
 const MeteorBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -72,7 +122,6 @@ const MeteorBackground: React.FC = () => {
     canvas.width = width;
     canvas.height = height;
 
-    // Static Stars (Background)
     const stars = Array.from({ length: 200 }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -81,7 +130,6 @@ const MeteorBackground: React.FC = () => {
       flickerSpeed: (Math.random() - 0.5) * 0.02
     }));
 
-    // Meteor Class
     class Meteor {
       x: number;
       y: number;
@@ -95,16 +143,16 @@ const MeteorBackground: React.FC = () => {
         this.y = 0;
         this.length = 0;
         this.speed = 0;
-        this.angle = Math.PI / 4; // 45 degrees
+        this.angle = Math.PI / 4; 
         this.active = false;
       }
 
       spawn() {
         this.x = Math.random() * width;
-        this.y = Math.random() * height * 0.5 - 100; // Start mainly in top half
+        this.y = Math.random() * height * 0.5 - 100;
         this.length = Math.random() * 80 + 20;
         this.speed = Math.random() * 3 + 4;
-        this.angle = Math.PI / 4 + (Math.random() * 0.2 - 0.1); // Slight angle variation
+        this.angle = Math.PI / 4 + (Math.random() * 0.2 - 0.1); 
         this.active = true;
       }
 
@@ -114,7 +162,6 @@ const MeteorBackground: React.FC = () => {
         const endX = this.x - this.length * Math.cos(this.angle);
         const endY = this.y - this.length * Math.sin(this.angle);
 
-        // Gradient tail
         const gradient = ctx.createLinearGradient(this.x, this.y, endX, endY);
         gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
         gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
@@ -127,11 +174,9 @@ const MeteorBackground: React.FC = () => {
         ctx.lineTo(endX, endY);
         ctx.stroke();
 
-        // Move
         this.x += this.speed * Math.cos(this.angle);
         this.y += this.speed * Math.sin(this.angle);
 
-        // Check bounds
         if (this.x > width + 100 || this.y > height + 100) {
           this.active = false;
         }
@@ -140,19 +185,15 @@ const MeteorBackground: React.FC = () => {
 
     const meteors = Array.from({ length: 5 }, () => new Meteor());
     
-    // Main Animation Loop
     const animate = () => {
       if (!ctx) return;
-      
-      // Clear canvas
-      ctx.fillStyle = '#0f172a'; // Slate-900 base
+      ctx.fillStyle = '#0f172a'; 
       ctx.fillRect(0, 0, width, height);
       
-      // Draw Stars
       ctx.fillStyle = 'white';
       stars.forEach(star => {
         star.alpha += star.flickerSpeed;
-        if (star.alpha > 1 || star.alpha < 0.2) star.flickerSpeed *= -1; // Bounce opacity
+        if (star.alpha > 1 || star.alpha < 0.2) star.flickerSpeed *= -1; 
         ctx.globalAlpha = star.alpha;
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
@@ -160,9 +201,8 @@ const MeteorBackground: React.FC = () => {
       });
       ctx.globalAlpha = 1;
 
-      // Manage Meteors
       meteors.forEach(m => {
-        if (!m.active && Math.random() < 0.01) { // 1% chance per frame to spawn if inactive
+        if (!m.active && Math.random() < 0.01) { 
           m.spawn();
         }
         m.draw();
@@ -188,7 +228,6 @@ const MeteorBackground: React.FC = () => {
 };
 
 // --- Galaxy Effect (Rotating Spiral) ---
-// A complex particle system resembling a spiral galaxy.
 const GalaxyBackground: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -203,7 +242,6 @@ const GalaxyBackground: React.FC = () => {
       canvas.width = width;
       canvas.height = height;
 
-      // Galaxy Particles
       const particleCount = 1000;
       const particles: { 
         angle: number; 
@@ -213,20 +251,15 @@ const GalaxyBackground: React.FC = () => {
         color: string 
       }[] = [];
 
-      // Initialize galaxy arms
       for(let i=0; i < particleCount; i++) {
-          const r = Math.random() * (Math.min(width, height) * 0.6); // Radius distribution
+          const r = Math.random() * (Math.min(width, height) * 0.6); 
           const angle = Math.random() * Math.PI * 2;
-          
-          // Spiral Arm Logic: Closer to center = faster angular velocity
           const speed = (0.02 / (r / 200 + 0.1)); 
-          
-          // Colors: mix of blue, purple, white
           const rand = Math.random();
           let color = '#ffffff';
-          if (rand > 0.9) color = '#fbcfe8'; // pink-ish
-          else if (rand > 0.6) color = '#a855f7'; // purple
-          else if (rand > 0.3) color = '#3b82f6'; // blue
+          if (rand > 0.9) color = '#fbcfe8'; 
+          else if (rand > 0.6) color = '#a855f7'; 
+          else if (rand > 0.3) color = '#3b82f6'; 
           
           particles.push({
               angle,
@@ -238,34 +271,26 @@ const GalaxyBackground: React.FC = () => {
       }
   
       const animate = () => {
-        // Trail effect
         ctx.fillStyle = 'rgba(5, 5, 10, 0.2)'; 
         ctx.fillRect(0, 0, width, height);
   
         ctx.save();
         ctx.translate(width/2, height/2);
 
-        // Draw particles
         particles.forEach(p => {
-            // Update angle
-            p.angle += p.speed * 0.05; // Slow down global speed
-
-            // Calculate Spiral Arm positions (Logarithmic spiral approximation)
-            // We modify the visual position by adding an offset based on radius to create arms
+            p.angle += p.speed * 0.05; 
             const armOffset = p.radius * 0.002; 
             const currentAngle = p.angle + armOffset;
 
             const x = Math.cos(currentAngle) * p.radius;
             const y = Math.sin(currentAngle) * p.radius;
             
-            // Draw
             ctx.beginPath();
             ctx.arc(x, y, p.size, 0, Math.PI * 2);
             ctx.fillStyle = p.color;
             ctx.fill();
         });
 
-        // Center bright core
         const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 100);
         gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
         gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
