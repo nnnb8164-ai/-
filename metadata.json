@@ -1,0 +1,5 @@
+{
+  "name": "智能字幕排版助手",
+  "description": "基于AI的字幕转小说排版工具，支持智能分段、语气词过滤及动态背景。",
+  "requestFramePermissions": []
+}
